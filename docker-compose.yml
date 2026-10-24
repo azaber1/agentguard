@@ -1,0 +1,61 @@
+name: agentguard
+
+services:
+  db:
+    image: postgres:16-alpine
+    environment:
+      POSTGRES_USER: agentguard
+      POSTGRES_PASSWORD: ${POSTGRES_PASSWORD:?Set POSTGRES_PASSWORD in .env}
+      POSTGRES_DB: agentguard
+    volumes:
+      - pgdata:/var/lib/postgresql/data
+    healthcheck:
+      test: ["CMD-SHELL", "pg_isready -U agentguard -d agentguard"]
+      interval: 5s
+      timeout: 3s
+      retries: 10
+    restart: unless-stopped
+
+  backend:
+    build: ./backend
+    environment:
+      DATABASE_URL: postgresql+psycopg://agentguard:${POSTGRES_PASSWORD}@db:5432/agentguard
+      SECRET_KEY: ${SECRET_KEY:?Set SECRET_KEY in .env}
+      ENVIRONMENT: ${ENVIRONMENT:-development}
+      ALLOW_REGISTRATION: ${ALLOW_REGISTRATION:-true}
+      COOKIE_SECURE: ${COOKIE_SECURE:-false}
+      ALLOW_PRIVATE_AGENT_URLS: ${ALLOW_PRIVATE_AGENT_URLS:-false}
+      SEED_DEMO_DATA: ${SEED_DEMO_DATA:-true}
+      DEMO_PASSWORD: ${DEMO_PASSWORD:-AgentGuard-demo-2026}
+    depends_on:
+      db:
+        condition: service_healthy
+    # Not published: only the frontend talks to the API, over the internal network.
+    expose:
+      - "8000"
+    restart: unless-stopped
+
+  frontend:
+    build:
+      context: ./frontend
+      args:
+        BACKEND_URL: http://backend:8000
+    ports:
+      - "${FRONTEND_PORT:-3000}:3000"
+    depends_on:
+      backend:
+        condition: service_healthy
+    restart: unless-stopped
+
+  # Optional: an example agent that speaks the HTTP step protocol.
+  # Start with:  docker compose --profile example up -d
+  # Register it with endpoint http://example-agent:9000/agentguard/step
+  # (requires ALLOW_PRIVATE_AGENT_URLS=true because it is on the private network).
+  example-agent:
+    build: ./examples/http_agent
+    profiles: ["example"]
+    expose:
+      - "9000"
+
+volumes:
+  pgdata:

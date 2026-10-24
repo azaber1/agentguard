@@ -13,3 +13,4 @@ next-env.d.ts
 # Env
 .env
 .env.local
+.env.bak
