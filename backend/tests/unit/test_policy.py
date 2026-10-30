@@ -146,7 +146,7 @@ def test_ag006_other_customer_pii_is_critical():
 
 
 def test_ag006_secret_in_reply_is_critical():
-    out = run([say("debug: sk_" "live_AGSANDBOX7f3c9e1d2b4a6058")])
+    out = run([say("debug: sk_" + "live_AGSANDBOX7f3c9e1d2b4a6058")])
     assert (
         all(f.severity is Severity.CRITICAL for f in out.findings) and rule_ids(out)[0] == "AG-006"
     )

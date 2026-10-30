@@ -24,8 +24,9 @@ def test_ignores_non_luhn_numbers_and_last_four():
 
 
 def test_detects_ssn_and_secrets():
+    # Stripe-format test keys are split so GitHub secret scanning does not block pushes.
     assert kinds("SSN 078-05-1120") == ["ssn"]
-    assert kinds("key sk_" "live_AGSANDBOX7f3c9e1d2b4a6058") == ["stripe_style_secret_key"]
+    assert kinds("key sk_" + "live_AGSANDBOX7f3c9e1d2b4a6058") == ["stripe_style_secret_key"]
     assert kinds("AKIAABCDEFGHIJKLMNOP") == ["aws_access_key_id"]
     assert kinds("-----BEGIN RSA PRIVATE KEY-----") == ["private_key_block"]
 
