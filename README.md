@@ -35,6 +35,7 @@ Architecture, data model and rule catalogue: [`docs/ARCHITECTURE.md`](docs/ARCHI
 Requirements: Docker with Compose v2.
 
 ```bash
+git clone https://github.com/azaber1/agentguard.git
 cd agentguard
 cp .env.example .env
 # Fill in the two required secrets:
@@ -76,6 +77,8 @@ Then register an agent with provider **HTTP endpoint** and URL
 
 ## Local development
 
+Commands below run from the repository root unless noted.
+
 Requirements: Python 3.12+, [uv](https://docs.astral.sh/uv/), Node.js 22, PostgreSQL 16.
 
 ```bash
@@ -83,7 +86,7 @@ Requirements: Python 3.12+, [uv](https://docs.astral.sh/uv/), Node.js 22, Postgr
 createdb agentguard && createdb agentguard_test
 
 # Backend (http://localhost:8000, API docs at /api/docs)
-cd agentguard/backend
+cd backend
 uv sync
 export DATABASE_URL=postgresql+psycopg://postgres:postgres@localhost:5432/agentguard
 uv run alembic upgrade head
@@ -91,7 +94,7 @@ uv run python -m app.seed          # optional demo data
 uv run uvicorn app.main:app --reload --port 8000
 
 # Frontend (http://localhost:3000), in another terminal
-cd agentguard/frontend
+cd frontend
 npm install
 npm run dev                        # proxies /api to BACKEND_URL (default http://localhost:8000)
 ```
@@ -100,21 +103,21 @@ npm run dev                        # proxies /api to BACKEND_URL (default http:/
 
 ```bash
 # Backend: 157 unit tests (no DB) + 42 integration tests (PostgreSQL)
-cd agentguard/backend
+cd backend
 export TEST_DATABASE_URL=postgresql+psycopg://postgres:postgres@localhost:5432/agentguard_test
 uv run pytest                  # everything
 uv run pytest tests/unit       # engine only, no database needed
 uv run ruff check app tests alembic
 
 # Frontend: Vitest, ESLint, type-check, production build
-cd agentguard/frontend
+cd frontend
 npm test && npm run lint && npm run typecheck && npm run build
 ```
 
 Integration tests build the schema from the Alembic migrations and always
 use `TEST_DATABASE_URL`. They never touch `DATABASE_URL`, and they truncate
 every table between tests. CI runs both suites
-([`.github/workflows/agentguard.yml`](../.github/workflows/agentguard.yml)).
+([`.github/workflows/ci.yml`](.github/workflows/ci.yml)).
 
 ## Configuration
 
